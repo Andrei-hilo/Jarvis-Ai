@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#050d18">
+<title>J.A.R.V.I.S. 3D</title>
+
+<style>
+:root {
+  --bg:#050d18;
+  --panel:#0a1b2b;
+  --cyan:#52dcf5;
+  --blue:#178dbd;
+  --text:#d9f5ff;
+  --muted:#7399ad;
+  --border:rgba(68,189,223,.24);
+  --green:#64edbd;
+}
+* {box-sizing:border-box}
+html,body {
+  margin:0;width:100%;height:100%;
+  overflow:hidden;background:var(--bg);
+  color:var(--text);
+  font-family:system-ui,-apple-system,sans-serif;
+}
+button,input,textarea,select {font:inherit}
+button {cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible {
+  outline:2px solid var(--cyan);outline-offset:2px
+}
+#app {
+  height:100dvh;width:100%;max-width:760px;
+  margin:auto;display:flex;flex-direction:column;
+  overflow:hidden;position:relative;isolation:isolate;
+  background:
+  radial-gradient(ellipse at 50% 32%,rgba(0,110,160,.15),transparent 48%),
+  linear-gradient(180deg,#071321,#040b15 65%,#061321);
+}
+#app:before {
+  content:"";position:absolute;inset:0;z-index:-1;opacity:.2;
+  background-image:
+    linear-gradient(rgba(71,160,194,.08) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(71,160,194,.08) 1px,transparent 1px);
+  background-size:36px 36px;
+}
+header {
+  z-index:5;min-height:65px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 13px;border-bottom:1px solid var(--border);
+  background:rgba(4,13,24,.88);
+  backdrop-filter:blur(14px);
+}
+.brand {display:flex;align-items:center;gap:10px}
+.brand-mark {
+  width:38px;height:38px;border:1px solid var(--cyan);
+  border-radius:50%;display:grid;place-items:center;
+  color:var(--cyan);box-shadow:0 0 18px #1488a533;
+}
+.brand-mark svg {width:24px}
+.brand h1 {margin:0;font-size:18px;letter-spacing:3px}
+.brand small {
+  display:block;margin-top:3px;color:var(--muted);
+  font-size:8px;letter-spacing:1.7px
+}
+.header-actions {display:flex;gap:6px;align-items:center}
+.icon-btn {
+  width:35px;height:35px;border-radius:10px;
+  color:#a9eaff;background:#12394e55;
+  border:1px solid var(--border);
+}
+.mode-pill {
+  border:1px solid #4ad7f044;
+  color:var(--cyan);background:#0c374c;
+  border-radius:30px;padding:8px 9px;
+  font-size:9px;letter-spacing:1px;
+}
+.status {
+  height:27px;flex-shrink:0;
+  display:flex;align-items:center;gap:8px;padding:0 15px;
+  font-size:9px;letter-spacing:1.4px;color:var(--muted)
+}
+.status-dot {
+  width:6px;height:6px;border-radius:50%;
+  background:var(--green);box-shadow:0 0 10px var(--green)
+}
+.status.busy .status-dot {background:#ffc66e;box-shadow:0 0 10px #ffc66e}
+.status.error .status-dot {background:#ff7979;box-shadow:0 0 10px #ff7979}
+
+/* NEURAL CORE */
+.visual {
+  position:relative;height:clamp(230px,35vh,370px);
+  min-height:210px;flex-shrink:0;overflow:hidden;
+}
+#brain {position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.visual-caption {
+  position:absolute;top:10px;left:0;width:100%;
+  text-align:center;pointer-events:none
+}
+.visual-caption strong {
+  font-size:9px;letter-spacing:3px;color:#7acbe7;font-weight:500
+}
+.visual-caption span {
+  display:block;font-size:8px;color:#456e85;margin-top:4px
+}
+.visual-label {
+  position:absolute;left:14px;bottom:12px;
+  font-size:8px;letter-spacing:1.5px;color:#5ca7c5
+}
+.visual-label.right {left:auto;right:14px}
+.visual-bottom {
+  position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+  display:flex;gap:9px;color:#568da7;font-size:8px;white-space:nowrap
+}
+.visual-bottom i {
+  width:4px;height:4px;border-radius:50%;
+  background:var(--cyan);box-shadow:0 0 8px var(--cyan)
+}
+
+/* CHAT */
+.chat-panel {
+  position:relative;z-index:2;flex:1;min-height:125px;
+  margin:0 10px 9px;display:flex;flex-direction:column;
+  overflow:hidden;border:1px solid var(--border);
+  border-radius:15px;
+  background:linear-gradient(145deg,#0a1b2bf0,#05101df2);
+  box-shadow:0 12px 38px #0004;
+}
+.chat-heading {
+  height:37px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 11px;border-bottom:1px solid #469fbd20;
+  color:#70b6d0;font-size:9px;letter-spacing:1.5px
+}
+.chat-heading button {
+  color:#74abc0;background:none;border:0;font-size:9px;padding:6px
+}
+#messages {
+  flex:1;overflow-y:auto;padding:12px;
+  scroll-behavior:smooth;overscroll-behavior:contain
+}
+.welcome {
+  min-height:100%;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;text-align:center;gap:8px
+}
+.welcome h2 {margin:0;font-size:18px;letter-spacing:2px;font-weight:500}
+.welcome p {margin:0;color:var(--muted);font-size:11px}
+.suggestions {display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:10px}
+.suggestions button {
+  background:#12405666;border:1px solid var(--border);
+  border-radius:25px;padding:8px 10px;font-size:10px;color:#9dd8ec
+}
+.message {
+  max-width:93%;margin-bottom:11px;padding:10px 12px;
+  border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere;
+  font-size:12px;line-height:1.6
+}
+.message.user {
+  margin-left:auto;background:#0d5a7acc;
+  border:1px solid #45c7e644;border-bottom-right-radius:3px
+}
+.message.ai {
+  margin-right:auto;background:#071828;
+  border:1px solid #50a7c333;border-bottom-left-radius:3px
+}
+.message-role {font-size:9px;letter-spacing:1.3px;color:#64c9e5;margin-bottom:4px}
+.message-tools {display:flex;justify-content:flex-end;gap:10px;margin-top:6px}
+.message-tools button {border:0;background:none;color:#70a4ba;font-size:9px}
+.typing {color:#60b8d6;font-size:10px;padding:9px;letter-spacing:2px}
+
+/* INPUT */
+.composer {position:relative;z-index:3;padding:0 10px 10px}
+.input-wrap {
+  display:flex;align-items:flex-end;gap:7px;
+  padding:7px;border-radius:14px;
+  border:1px solid #47bad94d;background:#071726;
+}
+#prompt {
+  resize:none;flex:1;min-width:0;max-height:100px;min-height:39px;
+  padding:10px 7px;color:#e4f8ff;background:transparent;
+  border:0;outline:none;font-size:13px
+}
+#prompt::placeholder {color:#527a90}
+#send {
+  width:42px;height:39px;border:1px solid #5dd9f277;
+  border-radius:10px;background:linear-gradient(145deg,#127fa8,#0a4c70);
+  color:white;font-weight:bold
+}
+#send:disabled {opacity:.45}
+.footer-note {text-align:center;color:#466b80;font-size:8px;padding-top:7px}
+
+/* MODALS */
+.modal {
+  display:none;position:fixed;inset:0;z-index:20;
+  align-items:center;justify-content:center;padding:12px;
+  background:#000c;backdrop-filter:blur(9px)
+}
+.modal.open {display:flex}
+.settings-box {
+  width:min(100%,490px);max-height:90dvh;overflow-y:auto;
+  padding:17px;border-radius:17px;
+  border:1px solid #4ec9e65c;
+  background:linear-gradient(145deg,#102b40,#071522);
+  box-shadow:0 0 40px #0089ba24
+}
+.settings-title {display:flex;align-items:center;justify-content:space-between}
+.settings-title h2 {margin:0;font-size:15px;letter-spacing:1.5px}
+.settings-title button {background:none;border:0;color:#9bcddd;font-size:23px}
+.settings-intro {font-size:10px;color:#86aabd;line-height:1.5}
+.field {margin:12px 0}
+.field label {display:block;font-size:9px;letter-spacing:1px;color:#86c7dc;margin-bottom:6px}
+.field input,.field select {
+  width:100%;height:39px;padding:0 10px;border-radius:8px;
+  border:1px solid #57a9c64d;background:#081c2d;color:#e0f7ff;
+  font-size:12px;outline:none
+}
+.field-help {color:#65899e;font-size:9px;line-height:1.5;margin-top:5px}
+.remember-row {display:flex;gap:8px;color:#9dbdca;font-size:10px;line-height:1.4}
+.remember-row input {accent-color:#29b4da}
+.warning {
+  padding:9px;border-radius:8px;background:#a0691d20;
+  border:1px solid #e5b25a33;color:#d9b77d;font-size:9px;line-height:1.5;margin:10px 0
+}
+.actions {display:flex;gap:7px;margin-top:13px}
+.actions button {
+  flex:1;min-height:38px;border-radius:9px;
+  border:1px solid var(--border);color:#d8f5ff;background:#0d334b;
+  font-size:10px
+}
+.actions .primary {background:linear-gradient(135deg,#117fa5,#095477);border-color:#42bbdd}
+[hidden] {display:none!important}
+
+/* TOOL CENTER */
+.tool-grid {display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.tool-button {
+  padding:11px 7px;color:#bcefff;border:1px solid #52dcf540;
+  background:#0b3046;border-radius:9px;font-size:10px
+}
+.tool-list {list-style:none;padding:0;margin:5px 0}
+.tool-list li {
+  display:flex;align-items:center;gap:7px;
+  padding:8px;border-bottom:1px solid #52dcf520;
+  color:#cceaf3;font-size:11px
+}
+.tool-list .item-text {flex:1;overflow-wrap:anywhere}
+.tool-list button {
+  border:0;border-radius:6px;padding:5px 7px;
+  background:#143b50;color:#8ceaff;font-size:9px
+}
+.tool-output {
+  min-height:35px;padding:9px;margin-top:8px;
+  border-radius:8px;background:#061724;border:1px solid #52dcf522;
+  color:#9ce5f4;font-size:10px;white-space:pre-wrap;overflow-wrap:anywhere
+}
+@media(max-height:680px) {
+  .visual {height:215px;min-height:195px}
+  header {min-height:56px}
+  .status {height:23px}
+}
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after {scroll-behavior:auto!important}
+}
+</style>
+</head>
+
+<body>
+<div id="app">
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="16" cy="16" r="11"/>
+        <circle cx="16" cy="16" r="5"/>
+        <path d="M16 1v7M16 24v7M1 16h7M24 16h7M5.5 5.5l5 5m11 11 5 5m0-21-5 5m-11 11-5 5"/>
+      </svg>
+    </div>
+    <div>
+      <h1>J.A.R.V.I.S.</h1>
+      <small>NEURAL INTELLIGENCE SYSTEM</small>
+    </div>
+  </div>
+
+  <div class="header-actions">
+    <button class="mode-pill" id="modeButton">OFFLINE</button>
+    <button class="icon-btn" id="toolsButton" title="Tools">⚙</button>
+    <button class="icon-btn" id="settingsButton" title="Settings">☷</button>
+  </div>
+</header>
+
+<div class="status" id="status">
+  <span class="status-dot"></span>
+  <span id="statusText">SYSTEM INITIALIZED</span>
+</div>
+
+<section class="visual">
+  <canvas id="brain"></canvas>
+  <div class="visual-caption">
+    <strong>NEURAL CORE VISUALIZER</strong>
+    <span>3D PERSPECTIVE • LIVE ANIMATION</span>
+  </div>
+  <div class="visual-label">CORE: <span style="color:#8deaff">ACTIVE</span></div>
+  <div class="visual-label right">DEPTH: 3D</div>
+  <div class="visual-bottom"><i></i> JARVIS NEURAL DISPLAY <i></i></div>
+</section>
+
+<section class="chat-panel">
+  <div class="chat-heading">
+    <span>COMMUNICATION CHANNEL</span>
+    <div>
+      <button id="clearChat">CLEAR CHAT</button>
+      <button id="showTools">TOOLS</button>
+    </div>
+  </div>
+  <div id="messages"></div>
+</section>
+
+<div class="composer">
+  <div class="input-wrap">
+    <textarea id="prompt" rows="1" placeholder="Ask JARVIS anything..." aria-label="Message"></textarea>
+    <button id="send" aria-label="Send">➤</button>
+  </div>
+  <div class="footer-note">LOCAL-FIRST AI • YOUR MODEL • YOUR CONTROL</div>
+</div>
+</div>
+
+<!-- SETTINGS -->
+<div class="modal" id="settingsModal">
+ <div class="settings-box">
+  <div class="settings-title">
+   <h2>SYSTEM CONFIGURATION</h2>
+   <button id="closeSettings">×</button>
+  </div>
+  <p class="settings-intro">Configure your AI engine.</p>
+
+  <div class="field">
+   <label for="provider">AI ENGINE</label>
+   <select id="provider">
+    <option value="offline">Offline fallback</option>
+    <option value="huggingface">Hugging Face AUTO</option>
+    <option value="ollama">Ollama local server</option>
+   </select>
+  </div>
+
+  <div id="hfFields">
+   <div class="field">
+    <label for="hfToken">HUGGING FACE TOKEN</label>
+    <input id="hfToken" type="password" placeholder="Paste your token">
+    <div class="field-help">Use a token with Inference Providers permission.</div>
+   </div>
+   <div class="field">
+    <label for="hfModel">MODEL SELECTOR</label>
+    <select id="hfModel">
+     <option value="AUTO">AUTO — select by task and fallback</option>
+     <option value="openai/gpt-oss-120b:fastest">GPT-OSS 120B</option>
+     <option value="deepseek-ai/DeepSeek-V3-0324:fastest">DeepSeek V3</option>
+     <option value="deepseek-ai/DeepSeek-R1:fastest">DeepSeek R1</option>
+    </select>
+   </div>
+   <label class="remember-row">
+    <input id="rememberToken" type="checkbox">
+    Remember token in this browser on this device
+   </label>
+   <div class="warning">
+    Hugging Face's free account allowance is limited (currently $0.10/month
+    and subject to change). Do not purchase credits or enable paid billing
+    if you want zero paid usage. A browser app cannot keep its API token
+    completely secret. Do not share your token or use it on a public device.
+   </div>
+  </div>
+
+  <div id="ollamaFields" hidden>
+   <div class="field">
+    <label for="ollamaUrl">OLLAMA SERVER URL</label>
+    <input id="ollamaUrl" value="http://127.0.0.1:11434">
+   </div>
+   <div class="field">
+    <label for="ollamaModel">OLLAMA MODEL</label>
+    <input id="ollamaModel" value="qwen3.5:2b">
+   </div>
+   <div class="warning">
+    GitHub Pages is HTTPS. Browsers block many HTTPS-to-HTTP requests.
+    Ollama also needs browser CORS access. A local server or properly
+    secured HTTPS connection may be required.
+   </div>
+  </div>
+
+  <div class="actions">
+   <button class="primary" id="saveSettings">SAVE SETTINGS</button>
+   <button id="cancelSettings">CANCEL</button>
+  </div>
+ </div>
+</div>
+
+<!-- TOOL CENTER -->
+<div class="modal" id="toolsModal">
+ <div class="settings-box">
+  <div class="settings-title">
+   <h2>JARVIS TOOL CENTER</h2>
+   <button id="closeTools">×</button>
+  </div>
+  <p class="settings-intro">Local tools. No AI API required.</p>
+
+  <div class="field">
+   <label>QUICK TOOLS</label>
+   <div class="tool-grid">
+    <button class="tool-button" data-command="time">Current time</button>
+    <button class="tool-button" data-command="date">Today's date</button>
+    <button class="tool-button" data-command="calculate 125*8">Calculator</button>
+    <button class="tool-button" data-command="show notes">View notes</button>
+    <button class="tool-button" data-command="show tasks">View tasks</button>
+    <button class="tool-button" data-command="help">Help</button>
+   </div>
+  </div>
+
+  <div class="field">
+   <label for="toolText">NOTE OR TASK</label>
+   <input id="toolText" placeholder="Type something...">
+  </div>
+  <div class="actions">
+   <button id="saveNote">SAVE NOTE</button>
+   <button class="primary" id="addTask">ADD TASK</button>
+  </div>
+
+  <div class="field">
+   <label for="toolCalc">CALCULATOR</label>
+   <input id="toolCalc" placeholder="(125 + 75) * 3">
+   <button class="tool-button" id="runCalc" style="width:100%;margin-top:7px">CALCULATE</button>
+  </div>
+
+  <div class="field">
+   <label>YOUR NOTES</label>
+   <ul class="tool-list" id="notesList"></ul>
+  </div>
+  <div class="field">
+   <label>YOUR TASKS</label>
+   <ul class="tool-list" id="tasksList"></ul>
+  </div>
+  <div class="tool-output" id="toolOutput">All tools operate locally in this browser.</div>
+ </div>
+</div>
+
+<script>
+"use strict";
+
+/* ==========================================
+   STORAGE AND SETTINGS
+========================================== */
+
+const $ = id => document.getElementById(id);
+
+const KEYS = {
+ settings:"jarvis_3d_settings_v2",
+ history:"jarvis_3d_history_v2",
+ token:"jarvis_hf_token_v2",
+ notes:"jarvis_notes_v2",
+ tasks:"jarvis_tasks_v2"
+};
+
+const DEFAULTS = {
+ provider:"offline",
+ hfModel:"AUTO",
+ ollamaUrl:"http://127.0.0.1:11434",
+ ollamaModel:"qwen3.5:2b"
+};
+
+function readJSON(key,fallback) {
+ try {
+  return JSON.parse(localStorage.getItem(key)) ?? fallback;
+ } catch { return fallback; }
+}
+
+function writeJSON(key,value) {
+ try { localStorage.setItem(key,JSON.stringify(value)); }
+ catch { console.warn("Browser storage unavailable."); }
+}
+
+let settings={...DEFAULTS,...readJSON(KEYS.settings,{})};
+
+let hfToken="";
+try {
+ hfToken=sessionStorage.getItem("jarvis_session_token") ||
+          localStorage.getItem(KEYS.token) || "";
+} catch {}
+
+let messages=readJSON(KEYS.history,[]);
+if(!Array.isArray(messages)) messages=[];
+messages=messages
+ .filter(m=>m && ["user","assistant"].includes(m.role) && typeof m.content==="string")
+ .slice(-40);
+
+let busy=false;
+let activeModel="";
+let modelFailures=[];
+
+const SYSTEM_MESSAGE={
+ role:"system",
+ content:
+ "You are JARVIS, a helpful personal AI assistant. " +
+ "Be clear, accurate and friendly. Explain difficult subjects step by step. " +
+ "Never claim you performed an action that you cannot perform. " +
+ "Local tools are available only through the app's explicit tool commands."
+};
+
+/* ==========================================
+   STATUS AND CHAT DISPLAY
+========================================== */
+
+const modeNames={
+ offline:"OFFLINE",
+ huggingface:"HUGGING FACE",
+ ollama:"OLLAMA LOCAL"
+};
+
+function updateMode() {
+ $("modeButton").textContent=modeNames[settings.provider] || "OFFLINE";
+}
+
+function status(text,type="normal") {
+ $("statusText").textContent=text;
+ $("status").className="status"+
+  (type==="busy"?" busy":type==="error"?" error":"");
+}
+
+function renderMessages() {
+ const box=$("messages");
+ box.replaceChildren();
+
+ if(!messages.length) {
+  const welcome=document.createElement("div");
+  welcome.className="welcome";
+  welcome.innerHTML=`
+   <h2>GOOD DAY.</h2>
+   <p>JARVIS is standing by. How may I assist?</p>
+   <div class="suggestions">
+    <button data-prompt="Introduce yourself.">Introduce yourself</button>
+    <button data-prompt="Explain neural networks.">Neural networks</button>
+    <button data-prompt="Help me write a Python script.">Write code</button>
+   </div>`;
+  box.append(welcome);
+  return;
+ }
+
+ for(const msg of messages) {
+  const bubble=document.createElement("div");
+  bubble.className="message "+(msg.role==="user"?"user":"ai");
+
+  const role=document.createElement("div");
+  role.className="message-role";
+  role.textContent=msg.role==="user"?"YOU":"J.A.R.V.I.S.";
+
+  const body=document.createElement("div");
+  body.textContent=msg.content;
+
+  bubble.append(role,body);
+
+  if(msg.role==="assistant") {
+   const tools=document.createElement("div");
+   tools.className="message-tools";
+
+   const copy=document.createElement("button");
+   copy.textContent="COPY";
+   copy.onclick=async()=>{
+    try {
+     await navigator.clipboard.writeText(msg.content);
+     copy.textContent="COPIED";
+     setTimeout(()=>copy.textContent="COPY",1200);
+    } catch {copy.textContent="FAILED";}
+   };
+
+   const speak=document.createElement("button");
+   speak.textContent="READ ALOUD";
+   speak.onclick=()=>{
+    if(!window.speechSynthesis) {
+     status("SPEECH UNAVAILABLE","error");
+     return;
+    }
+    speechSynthesis.cancel();
+    speechSynthesis.speak(new SpeechSynthesisUtterance(msg.content));
+   };
+
+   tools.append(copy,speak);
+   bubble.append(tools);
+  }
+
+  box.append(bubble);
+ }
+
+ box.scrollTop=box.scrollHeight;
+}
+
+$("messages").addEventListener("click",e=>{
+ const b=e.target.closest("[data-prompt]");
+ if(!b)return;
+ $("prompt").value=b.dataset.prompt;
+ $("prompt").focus();
+ resizeInput();
+});
+
+$("clearChat").onclick=()=>{
+ messages=[];
+ writeJSON(KEYS.history,messages);
+ renderMessages();
+ status("CHAT CLEARED");
+};
+
+/* ==========================================
+   SAFE CALCULATOR — NO EVAL()
+========================================== */
+
+function calculateSafely(input) {
+ if(typeof input!=="string" || input.length>100) {
+  throw Error("Expression is too long.");
+ }
+
+ const compact=input.replace(/\s+/g,"");
+ const tokens=compact.match(/\d+(?:\.\d+)?|[()+\-*/%]/g);
+
+ if(!tokens || tokens.join("")!==compact) {
+  throw Error("Only basic arithmetic is supported.");
+ }
+
+ let i=0;
+
+ function factor() {
+  if(tokens[i]==="+") {
+   i++;
+   return factor();
+  }
+  if(tokens[i]==="-") {
+   i++;
+   return -factor();
+  }
+  if(tokens[i]==="(") {
+   i++;
+   const n=expression();
+   if(tokens[i]!==")") throw Error("Missing closing parenthesis.");
+   i++;
+   return n;
+  }
+
+  const token=tokens[i++];
+  if(token===undefined) throw Error("Incomplete expression.");
+
+  const n=Number(token);
+  if(!Number.isFinite(n)) throw Error("Invalid number.");
+  return n;
+ }
+
+ function term() {
+  let n=factor();
+  while(["*","/","%"].includes(tokens[i])) {
+   const op=tokens[i++];
+   const b=factor();
+
+   if((op==="/" || op==="%") && b===0) {
+    throw Error("Cannot divide by zero.");
+   }
+
+   if(op==="*") n*=b;
+   if(op==="/") n/=b;
+   if(op==="%") n%=b;
+  }
+  return n;
+ }
+
+ function expression() {
+  let n=term();
+
+  while(tokens[i]==="+" || tokens[i]==="-") {
+   const op=tokens[i++];
+   const b=term();
+   n=op==="+"?n+b:n-b;
+  }
+
+  return n;
+ }
+
+ const result=expression();
+
+ if(i!==tokens.length || !Number.isFinite(result) || Math.abs(result)>1e15) {
+  throw Error("Invalid or excessively large result.");
+ }
+
+ return result;
+}
+
+/* ==========================================
+   LOCAL TOOLS
+========================================== */
+
+function getItems(key) {
+ const data=readJSON(key,[]);
+ return Array.isArray(data)?data:[];
+}
+
+function saveItems(key,data) {
+ writeJSON(key,data);
+}
+
+function runLocalTool(command) {
+ const text=command.trim();
+ const low=text.toLowerCase();
+
+ if(low==="time" || low==="what time is it" || low==="current time") {
+  return "Local time: "+new Date().toLocaleTimeString();
+ }
+
+ if(low==="date" || low==="today" || low==="today's date" ||
+    low==="what date is it") {
+  return "Today's date: "+new Date().toLocaleDateString(undefined,{
+   weekday:"long",year:"numeric",month:"long",day:"numeric"
+  });
+ }
+
+ const calc=text.match(/^(?:calculate|calc)\s+(.+)$/i);
+
+ if(calc) {
+  try {
+   return "Result: "+calculateSafely(calc[1]);
+  } catch(e) {
+   return "Calculator error: "+e.message;
+  }
+ }
+
+ const note=text.match(/^(?:save note|add note|note)\s*:\s*(.+)$/i);
+
+ if(note) {
+  const notes=getItems(KEYS.notes);
+  notes.push({text:note[1],created:Date.now()});
+  saveItems(KEYS.notes,notes);
+  refreshToolLists();
+  return "Note saved.";
+ }
+
+ if(/^(show|list|view)\s+notes$/i.test(text)) {
+  const notes=getItems(KEYS.notes);
+  return notes.length
+   ? notes.map((n,i)=>(i+1)+". "+n.text).join("\n")
+   : "No saved notes.";
+ }
+
+ const deleteNote=text.match(/^delete note\s+(\d+)$/i);
+
+ if(deleteNote) {
+  const notes=getItems(KEYS.notes);
+  const i=Number(deleteNote[1])-1;
+  if(!notes[i]) return "Note not found.";
+  notes.splice(i,1);
+  saveItems(KEYS.notes,notes);
+  refreshToolLists();
+  return "Note deleted.";
+ }
+
+ const task=text.match(/^(?:add task|task)\s*:\s*(.+)$/i);
+
+ if(task) {
+  const tasks=getItems(KEYS.tasks);
+  tasks.push({text:task[1],done:false,created:Date.now()});
+  saveItems(KEYS.tasks,tasks);
+  refreshToolLists();
+  return "Task added.";
+ }
+
+ if(/^(show|list|view)\s+tasks$/i.test(text)) {
+  const tasks=getItems(KEYS.tasks);
+  return tasks.length
+   ? tasks.map((t,i)=>(i+1)+". "+(t.done?"[DONE] ":"[PENDING] ")+t.text).join("\n")
+   : "No tasks.";
+ }
+
+ const done=text.match(/^(?:complete|finish|done)\s+task\s+(\d+)$/i);
+
+ if(done) {
+  const tasks=getItems(KEYS.tasks);
+  const i=Number(done[1])-1;
+  if(!tasks[i]) return "Task not found.";
+  tasks[i].done=true;
+  saveItems(KEYS.tasks,tasks);
+  refreshToolLists();
+  return "Task completed.";
+ }
+
+ const del=text.match(/^delete task\s+(\d+)$/i);
+
+ if(del) {
+  const tasks=getItems(KEYS.tasks);
+  const i=Number(del[1])-1;
+  if(!tasks[i]) return "Task not found.";
+  tasks.splice(i,1);
+  saveItems(KEYS.tasks,tasks);
+  refreshToolLists();
+  return "Task deleted.";
+ }
+
+ const conversion=text.match(
+  /^convert\s+(-?\d+(?:\.\d+)?)\s*(km|m|cm|mm|kg|g|lb|mi|miles?)\s+to\s+(km|m|cm|mm|kg|g|lb|mi|miles?)$/i
+ );
+
+ if(conversion) {
+  const value=Number(conversion[1]);
+  const from=conversion[2].toLowerCase();
+  const to=conversion[3].toLowerCase();
+  const unit={
+   km:["length",1000],m:["length",1],
+   cm:["length",.01],mm:["length",.001],
+   kg:["weight",1],g:["weight",.001],
+   lb:["weight",.45359237],
+   mi:["length",1609.344],
+   mile:["length",1609.344],
+   miles:["length",1609.344]
+  };
+  if(unit[from][0]!==unit[to][0]) {
+   return "Those units are incompatible.";
+  }
+  return value+" "+from+" = "+
+   (value*unit[from][1]/unit[to][1]).toFixed(5)+" "+to;
+ }
+
+ if(low==="help" || low==="/help") {
+  return [
+   "JARVIS COMMANDS",
+   "calculate 10*5",
+   "save note: your note",
+   "show notes",
+   "delete note 1",
+   "add task: your task",
+   "show tasks",
+   "complete task 1",
+   "delete task 1",
+   "convert 5 km to miles",
+   "time",
+   "date"
+  ].join("\n");
+ }
+
+ return null;
+}
+
+function addLocalMessage(text) {
+ messages.push({role:"assistant",content:"[LOCAL TOOL]\n"+text});
+ messages=messages.slice(-40);
+ writeJSON(KEYS.history,messages);
+ renderMessages();
+}
+
+/* ==========================================
+   AUTO MODEL SELECTION
+========================================== */
+
+const MODEL_GROUPS={
+ general:[
+  "deepseek-ai/DeepSeek-V3-0324:fastest",
+  "openai/gpt-oss-120b:fastest",
+  "deepseek-ai/DeepSeek-R1:fastest"
+ ],
+ coding:[
+  "openai/gpt-oss-120b:fastest",
+  "deepseek-ai/DeepSeek-V3-0324:fastest",
+  "deepseek-ai/DeepSeek-R1:fastest"
+ ],
+ reasoning:[
+  "deepseek-ai/DeepSeek-R1:fastest",
+  "openai/gpt-oss-120b:fastest",
+  "deepseek-ai/DeepSeek-V3-0324:fastest"
+ ]
+};
+
+function chooseModels(history) {
+ const last=[...history].reverse()
+  .find(m=>m.role==="user")?.content || "";
+
+ const text=last.toLowerCase();
+
+ if(/python|javascript|html|css|code|script|debug|program|function/.test(text)) {
+  return MODEL_GROUPS.coding;
+ }
+
+ if(/reason|analy[sz]e|logic|proof|complex|step by step|compare/.test(text)) {
+  return MODEL_GROUPS.reasoning;
+ }
+
+ return MODEL_GROUPS.general;
+}
+
+class APIError extends Error {
+ constructor(message,status) {
+  super(message);
+  this.status=status;
+ }
+}
+
+async function callHFModel(model,history) {
+ if(!hfToken) {
+  throw new APIError("Enter your Hugging Face token in Settings.",401);
+ }
+
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),75000);
+
+ try {
+  const response=await fetch(
+   "https://router.huggingface.co/v1/chat/completions",
+   {
+    method:"POST",
+    headers:{
+     Authorization:"Bearer "+hfToken,
+     "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+     model,
+     messages:[SYSTEM_MESSAGE,...history.slice(-12)],
+     max_tokens:700,
+     temperature:.65,
+     stream:false
+    }),
+    signal:controller.signal
+   }
+  );
+
+  const data=await response.json().catch(()=>({}));
+
+  if(!response.ok) {
+   const detail=data?.error?.message ||
+                data?.error || data?.message ||
+                "Provider request failed.";
+
+   throw new APIError(
+    "Hugging Face "+response.status+": "+detail,
+    response.status
+   );
+  }
+
+  const result=data?.choices?.[0]?.message?.content;
+
+  if(!result) throw new APIError("Empty model response.",500);
+
+  return typeof result==="string"
+   ? result
+   : result.map(p=>p.text||"").join("\n");
+
+ } catch(e) {
+  if(e.name==="AbortError") {
+   throw new APIError("Request timed out.",408);
+  }
+  if(e instanceof TypeError) {
+   throw new APIError("Could not reach Hugging Face. Check your internet and browser connection.",0);
+  }
+  throw e;
+ } finally {
+  clearTimeout(timer);
+ }
+}
+
+async function askHuggingFace(history) {
+ const manual=settings.hfModel && settings.hfModel!=="AUTO";
+ const models=manual?[settings.hfModel]:chooseModels(history);
+
+ modelFailures=[];
+
+ for(let i=0;i<models.length;i++) {
+  const model=models[i];
+
+  try {
+   status("LOADING "+model,"busy");
+
+   const reply=await callHFModel(model,history);
+
+   activeModel=model;
+   status("ACTIVE: "+model);
+
+   return reply;
+
+  } catch(e) {
+   modelFailures.push(model+": "+e.message);
+
+   // Never retry exhausted credits, rate limits, or invalid tokens.
+   // Only retry model/provider availability errors.
+   const retryable=[404,410,422,500,502,503];
+
+   if(manual || !retryable.includes(e.status)) {
+    throw e;
+   }
+
+   if(i<models.length-1) {
+    status("MODEL UNAVAILABLE — SWITCHING","busy");
+   }
+  }
+ }
+
+ throw Error("No selected model is available.\n"+modelFailures.join("\n"));
+}
+
+async function askOllama(history) {
+ const base=settings.ollamaUrl.replace(/\/+$/,"");
+
+ if(!/^https?:\/\//i.test(base)) {
+  throw Error("Invalid Ollama URL.");
+ }
+
+ if(location.protocol==="https:" &&
+    new URL(base).protocol==="http:" &&
+    !["localhost","127.0.0.1","::1"].includes(new URL(base).hostname)) {
+  throw Error("HTTPS GitHub Pages cannot normally connect to an HTTP Ollama server. Use a secure local connection.");
+ }
+
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),75000);
+
+ try {
+  const response=await fetch(base+"/api/chat",{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({
+    model:settings.ollamaModel,
+    messages:[SYSTEM_MESSAGE,...history.slice(-12)],
+    stream:false,
+    options:{temperature:.65,num_predict:700}
+   }),
+   signal:controller.signal
+  });
+
+  const data=await response.json().catch(()=>({}));
+
+  if(!response.ok) {
+   throw Error("Ollama "+response.status+": "+(data.error||"Request failed."));
+  }
+
+  if(!data.message?.content) throw Error("Empty Ollama response.");
+
+  activeModel=settings.ollamaModel;
+  return data.message.content;
+
+ } catch(e) {
+  if(e.name==="AbortError") throw Error("Ollama timed out.");
+  if(e instanceof TypeError) {
+   throw Error("Could not reach Ollama. Check server URL, CORS and network settings.");
+  }
+  throw e;
+ } finally {
+  clearTimeout(timer);
+ }
+}
+
+function offlineReply(text) {
+ const result=runLocalTool(text);
+
+ if(result!==null) return result;
+
+ return "I'm running in offline fallback mode. I can use my calculator, notes, task manager, unit converter and date/time tools. Connect Hugging Face or Ollama in Settings for full AI conversations.";
+}
+
+async function getAIResponse(history) {
+ if(settings.provider==="huggingface") {
+  return askHuggingFace(history);
+ }
+
+ if(settings.provider==="ollama") {
+  return askOllama(history);
+ }
+
+ const last=[...history].reverse().find(m=>m.role==="user");
+ return offlineReply(last?.content||"");
+}
+
+/* ==========================================
+   SEND MESSAGE
+========================================== */
+
+async function sendMessage() {
+ const field=$("prompt");
+ const text=field.value.trim();
+
+ if(!text || busy) return;
+
+ field.value="";
+ resizeInput();
+
+ messages.push({role:"user",content:text});
+ messages=messages.slice(-40);
+
+ writeJSON(KEYS.history,messages);
+ renderMessages();
+
+ // Local tools are available in every provider mode.
+ const localResult=runLocalTool(text);
+
+ if(localResult!==null) {
+  addLocalMessage(localResult);
+  status("LOCAL TOOL EXECUTED");
+  return;
+ }
+
+ busy=true;
+ $("send").disabled=true;
+ status("PROCESSING REQUEST","busy");
+
+ const typing=document.createElement("div");
+ typing.className="typing";
+ typing.textContent="J.A.R.V.I.S. IS THINKING...";
+ $("messages").append(typing);
+ $("messages").scrollTop=$("messages").scrollHeight;
+
+ try {
+  const reply=await getAIResponse(messages);
+  messages.push({role:"assistant",content:reply});
+  status("SYSTEM READY");
+ } catch(e) {
+  messages.push({
+   role:"assistant",
+   content:"I couldn't complete that request.\n\n"+e.message
+  });
+  status("CONNECTION ISSUE","error");
+ } finally {
+  busy=false;
+  $("send").disabled=false;
+  writeJSON(KEYS.history,messages);
+  renderMessages();
+ }
+}
+
+$("send").onclick=sendMessage;
+
+$("prompt").addEventListener("keydown",e=>{
+ if(e.key==="Enter" && !e.shiftKey) {
+  e.preventDefault();
+  sendMessage();
+ }
+});
+
+function resizeInput() {
+ const p=$("prompt");
+ p.style.height="auto";
+ p.style.height=Math.min(100,p.scrollHeight)+"px";
+}
+$("prompt").addEventListener("input",resizeInput);
+
+/* ==========================================
+   SETTINGS
+========================================== */
+
+function openSettings() {
+ $("provider").value=settings.provider;
+ $("hfToken").value=hfToken;
+ $("hfModel").value=settings.hfModel;
+ $("ollamaUrl").value=settings.ollamaUrl;
+ $("ollamaModel").value=settings.ollamaModel;
+ $("rememberToken").checked=Boolean(localStorage.getItem(KEYS.token));
+
+ updateSettingsFields();
+ $("settingsModal").classList.add("open");
+}
+
+function updateSettingsFields() {
+ const p=$("provider").value;
+ $("hfFields").hidden=p!=="huggingface";
+ $("ollamaFields").hidden=p!=="ollama";
+}
+
+$("provider").onchange=updateSettingsFields;
+
+$("settingsButton").onclick=openSettings;
+$("closeSettings").onclick=()=>$("settingsModal").classList.remove("open");
+$("cancelSettings").onclick=()=>$("settingsModal").classList.remove("open");
+
+$("settingsModal").onclick=e=>{
+ if(e.target===$("settingsModal")) {
+  $("settingsModal").classList.remove("open");
+ }
+};
+
+$("saveSettings").onclick=()=>{
+ settings.provider=$("provider").value;
+ settings.hfModel=$("hfModel").value.trim()||"AUTO";
+ settings.ollamaUrl=$("ollamaUrl").value.trim()||DEFAULTS.ollamaUrl;
+ settings.ollamaModel=$("ollamaModel").value.trim()||DEFAULTS.ollamaModel;
+
+ hfToken=$("hfToken").value.trim();
+
+ try {
+  sessionStorage.setItem("jarvis_session_token",hfToken);
+
+  if($("rememberToken").checked && hfToken) {
+   localStorage.setItem(KEYS.token,hfToken);
+  } else {
+   localStorage.removeItem(KEYS.token);
+  }
+ } catch {}
+
+ writeJSON(KEYS.settings,settings);
+
+ $("settingsModal").classList.remove("open");
+ updateMode();
+ status("SETTINGS SAVED");
+};
+
+$("modeButton").onclick=()=>{
+ const modes=["offline","huggingface","ollama"];
+ const i=modes.indexOf(settings.provider);
+ settings.provider=modes[(i+1)%modes.length];
+ writeJSON(KEYS.settings,settings);
+ updateMode();
+ status("ENGINE: "+modeNames[settings.provider]);
+};
+
+/* ==========================================
+   TOOL CENTER UI
+========================================== */
+
+function openTools() {
+ refreshToolLists();
+ $("toolsModal").classList.add("open");
+}
+
+function closeTools() {
+ $("toolsModal").classList.remove("open");
+}
+
+$("toolsButton").onclick=openTools;
+$("showTools").onclick=openTools;
+$("closeTools").onclick=closeTools;
+
+$("toolsModal").onclick=e=>{
+ if(e.target===$("toolsModal")) closeTools();
+};
+
+function showToolOutput(text) {
+ $("toolOutput").textContent=text;
+}
+
+function toolInputCommand(cmd) {
+ const result=runLocalTool(cmd);
+ showToolOutput(result===null?"Unknown command.":result);
+}
+
+document.querySelectorAll("[data-command]").forEach(b=>{
+ b.onclick=()=>{
+  const command=b.dataset.command;
+  const result=runLocalTool(command);
+  showToolOutput(result||"Command unavailable.");
+
+  if(command==="help") return;
+  if(command==="show notes" || command==="show tasks") return;
+ };
+});
+
+$("saveNote").onclick=()=>{
+ const value=$("toolText").value.trim();
+ if(!value) return showToolOutput("Enter a note first.");
+
+ showToolOutput(runLocalTool("save note: "+value));
+ $("toolText").value="";
+};
+
+$("addTask").onclick=()=>{
+ const value=$("toolText").value.trim();
+ if(!value) return showToolOutput("Enter a task first.");
+
+ showToolOutput(runLocalTool("add task: "+value));
+ $("toolText").value="";
+};
+
+$("runCalc").onclick=()=>{
+ const value=$("toolCalc").value.trim();
+ if(!value) return showToolOutput("Enter an expression.");
+
+ toolInputCommand("calculate "+value);
+};
+
+function createToolButton(label,action) {
+ const b=document.createElement("button");
+ b.textContent=label;
+ b.onclick=action;
+ return b;
+}
+
+function refreshToolLists() {
+ const notes=getItems(KEYS.notes);
+ const tasks=getItems(KEYS.tasks);
+
+ const noteList=$("notesList");
+ const taskList=$("tasksList");
+
+ noteList.replaceChildren();
+ taskList.replaceChildren();
+
+ if(!notes.length) {
+  const li=document.createElement("li");
+  li.textContent="No notes yet.";
+  noteList.append(li);
+ }
+
+ notes.forEach((n,i)=>{
+  const li=document.createElement("li");
+  const txt=document.createElement("span");
+  txt.className="item-text";
+  txt.textContent=(i+1)+". "+n.text;
+
+  const del=createToolButton("DELETE",()=>{
+   runLocalTool("delete note "+(i+1));
+   refreshToolLists();
+   showToolOutput("Note deleted.");
+  });
+
+  li.append(txt,del);
+  noteList.append(li);
+ });
+
+ if(!tasks.length) {
+  const li=document.createElement("li");
+  li.textContent="No tasks yet.";
+  taskList.append(li);
+ }
+
+ tasks.forEach((t,i)=>{
+  const li=document.createElement("li");
+
+  const txt=document.createElement("span");
+  txt.className="item-text";
+  txt.textContent=(i+1)+". "+(t.done?"✓ ":"") + t.text;
+
+  const done=createToolButton(t.done?"DONE":"FINISH",()=>{
+   if(!t.done) runLocalTool("complete task "+(i+1));
+   refreshToolLists();
+   showToolOutput("Task updated.");
+  });
+
+  const del=createToolButton("DELETE",()=>{
+   runLocalTool("delete task "+(i+1));
+   refreshToolLists();
+   showToolOutput("Task deleted.");
+  });
+
+  li.append(txt,done,del);
+  taskList.append(li);
+ });
+}
+
+/* ==========================================
+   3D NEURAL BRAIN VISUALIZER
+========================================== */
+
+const canvas=$("brain");
+const ctx=canvas.getContext("2d",{alpha:true});
+
+let W=0,H=0,DPR=1;
+let animationTime=0;
+let lastFrame=0;
+
+const reducedMotion=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function resizeCanvas() {
+ const rect=canvas.getBoundingClientRect();
+
+ W=Math.max(1,rect.width);
+ H=Math.max(1,rect.height);
+
+ DPR=Math.min(window.devicePixelRatio||1,1.25);
+
+ canvas.width=Math.round(W*DPR);
+ canvas.height=Math.round(H*DPR);
+
+ ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+
+const nodes=[];
+const edges=[];
+
+function buildBrain() {
+ nodes.length=0;
+ edges.length=0;
+
+ for(const side of [-1,1]) {
+  for(let i=0;i<58;i++) {
+   const vertical=Math.random()*2-1;
+   const angle=(Math.random()-.5)*Math.PI;
+   const ring=Math.sqrt(1-vertical*vertical);
+
+   const x=side*(.18+.57*ring*Math.cos(angle));
+   const y=vertical*.76;
+   const z=ring*Math.sin(angle)*.50;
+
+   nodes.push({
+    x,y,z,
+    phase:Math.random()*Math.PI*2
+   });
+  }
+ }
+
+ for(let i=0;i<nodes.length;i++) {
+  const choices=[];
+  const a=nodes[i];
+
+  for(let j=i+1;j<nodes.length;j++) {
+   const b=nodes[j];
+
+   const dx=a.x-b.x;
+   const dy=a.y-b.y;
+   const dz=a.z-b.z;
+
+   const dist=dx*dx+dy*dy+dz*dz;
+
+   if(dist<.24) choices.push({j,dist});
+  }
+
+  choices.sort((a,b)=>a.dist-b.dist);
+  for(const c of choices.slice(0,2)) {
+   edges.push([i,c.j]);
+  }
+ }
+}
+
+function project3D(p,angle,cx,cy,sx,sy) {
+ const ca=Math.cos(angle);
+ const sa=Math.sin(angle);
+
+ const x=p.x*ca-p.z*sa;
+ const z=p.x*sa+p.z*ca;
+
+ const pitch=.15*Math.sin(animationTime*.0005);
+ const cp=Math.cos(pitch);
+ const sp=Math.sin(pitch);
+
+ const y=p.y*cp-z*sp;
+ const depth=p.y*sp+z*cp;
+
+ const perspective=2.7/(2.7+depth);
+
+ return {
+  x:cx+x*sx*perspective,
+  y:cy+y*sy*perspective,
+  depth:perspective
+ };
+}
+
+function drawBrain(t) {
+ const cx=W/2;
+ const cy=H*.49;
+
+ const radius=Math.min(W*.30,H*.40,133);
+ const angle=t*.00020;
+
+ // Circular holographic rings
+ ctx.save();
+ ctx.translate(cx,cy);
+
+ for(let i=0;i<3;i++) {
+  const r=radius+(i-1)*16;
+
+  ctx.beginPath();
+  ctx.ellipse(0,0,r,r*.73,0,0,Math.PI*2);
+  ctx.strokeStyle=`rgba(40,158,195,${.17-i*.025})`;
+  ctx.lineWidth=1;
+  ctx.stroke();
+ }
+
+ for(let i=0;i<4;i++) {
+  const r=radius+27+i*7;
+  const dir=i%2===0?1:-1;
+  const start=t*.00018*dir+i*1.7;
+
+  ctx.beginPath();
+  ctx.ellipse(0,0,r,r*.73,0,start,start+1.05);
+  ctx.strokeStyle="rgba(70,202,229,.65)";
+  ctx.lineWidth=1.3;
+  ctx.stroke();
+ }
+
+ for(let i=0;i<48;i++) {
+  const a=i*Math.PI*2/48;
+  const r=radius+21;
+  const len=i%4===0?9:4;
+
+  ctx.beginPath();
+  ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r*.73);
+  ctx.lineTo(Math.cos(a)*(r+len),Math.sin(a)*(r+len)*.73);
+  ctx.strokeStyle="rgba(58,173,206,.42)";
+  ctx.stroke();
+ }
+
+ ctx.restore();
+
+ const sx=radius*.86;
+ const sy=radius*.75;
+
+ const projected=nodes.map(p=>project3D(p,angle,cx,cy,sx,sy));
+
+ // Neural connections
+ ctx.lineWidth=.8;
+
+ for(const [a,b] of edges) {
+  const p=projected[a];
+  const q=projected[b];
+
+  ctx.strokeStyle="rgba(57,177,218,.20)";
+  ctx.beginPath();
+  ctx.moveTo(p.x,p.y);
+  ctx.lineTo(q.x,q.y);
+  ctx.stroke();
+ }
+
+ // Neural nodes
+ for(let i=0;i<projected.length;i++) {
+  const p=projected[i];
+  const pulse=.5+.5*Math.sin(animationTime*.002+nodes[i].phase);
+  const r=1+pulse*1.3;
+
+  ctx.beginPath();
+  ctx.arc(p.x,p.y,r+2,0,Math.PI*2);
+  ctx.fillStyle="rgba(25,144,190,.13)";
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(p.x,p.y,r,0,Math.PI*2);
+  ctx.fillStyle=`rgba(126,231,250,${.6+pulse*.35})`;
+  ctx.fill();
+ }
+
+ // Central cleft
+ ctx.beginPath();
+ ctx.moveTo(cx,cy-radius*.66);
+ ctx.lineTo(cx,cy+radius*.66);
+ ctx.strokeStyle="rgba(70,174,211,.28)";
+ ctx.stroke();
+
+ // Orbiting data signal
+ const orbit=radius+30;
+ const ox=cx+Math.cos(t*.0006)*orbit;
+ const oy=cy+Math.sin(t*.0006)*orbit*.73;
+
+ ctx.beginPath();
+ ctx.arc(ox,oy,3,0,Math.PI*2);
+ ctx.fillStyle="#69e9ff";
+ ctx.shadowColor="#37d9ff";
+ ctx.shadowBlur=12;
+ ctx.fill();
+ ctx.shadowBlur=0;
+}
+
+function animate(timestamp) {
+ requestAnimationFrame(animate);
+
+ if(document.hidden) return;
+ if(timestamp-lastFrame<33) return;
+
+ const elapsed=lastFrame?Math.min(50,timestamp-lastFrame):33;
+ lastFrame=timestamp;
+
+ if(!reducedMotion) animationTime+=elapsed;
+
+ ctx.clearRect(0,0,W,H);
+ drawBrain(timestamp);
+}
+
+window.addEventListener("resize",resizeCanvas,{passive:true});
+buildBrain();
+resizeCanvas();
+requestAnimationFrame(animate);
+
+/* ==========================================
+   INITIALIZE
+========================================== */
+
+updateMode();
+renderMessages();
+refreshToolLists();
+status("SYSTEM INITIALIZED");
+
+</script>
+</body>
+</html>
